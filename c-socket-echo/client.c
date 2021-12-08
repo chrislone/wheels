@@ -23,7 +23,7 @@ int main(int argc, char **argv)
     // 此处 INADDR_ANY 表示 32 位的 0
     serveraddr.sin_addr.s_addr = htonl(INADDR_ANY);
 
-    bind(client_sock, (struct sockaddr *)&serveraddr, sizeof(serveraddr));
+    // bind(client_sock, (struct sockaddr *)&serveraddr, sizeof(serveraddr));
     int connfd;
     if ((connfd = connect(client_sock, (struct sockaddr *)&serveraddr, sizeof(serveraddr))) < 0)
     {
