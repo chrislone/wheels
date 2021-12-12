@@ -1,2 +1,8 @@
 .vscode/
 .idea/
+
+*.out
+
+c-socket-echo/client
+c-socket-echo/server
+c-http-request/main
