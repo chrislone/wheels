@@ -22,15 +22,12 @@ int main(int argc, char **argv) {
     struct sockaddr_in server_addr;
     // 16 位无符号整型
     uint16_t PORT;
-    char server_ip[32];
 
-    if (argc < 3) {
-        puts("missing params, exit.(./main <ip> <port>)");
+    if (argc < 2) {
+        puts("missing params, exit.(./main <port>)");
         exit(0);
     }
-    // 读取格式化输入到第三个参数指定的地址
-    sscanf(argv[1], "%s", server_ip);
-    sscanf(argv[2], "%hu", &PORT);
+    sscanf(argv[1], "%hu", &PORT);
 
     int server_sock_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (server_sock_fd == -1) {
