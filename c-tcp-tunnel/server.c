@@ -21,8 +21,6 @@ unsigned int remote_socket_fd;
 
 uint16_t server_port = 8890;
 uint16_t remote_server_port = 80;
-// baidu ip
-char REMOTE_SERVER_IP[] = "183.232.231.174";
 
 int init_server_socket();
 
