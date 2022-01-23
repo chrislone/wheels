@@ -4,11 +4,10 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <arpa/inet.h>
 #include <netdb.h>
 #include <unistd.h>
-#include <errno.h>
 #include <sys/select.h>
+#include "http.h"
 
 #define BUFFER_SIZE 4096
 
@@ -18,9 +17,14 @@ unsigned int server_sock_fd;
 unsigned int client_sock_fd;
 // 远程服务器的 socket fd
 unsigned int remote_socket_fd;
+// 远程服务器域名，从 http 请求的 host 头中获取
+char remote_server_name[100];
 
-uint16_t server_port = 8890;
+uint16_t server_port;
 uint16_t remote_server_port = 80;
+
+// extern 变量
+method_t method_struct;
 
 int init_server_socket();
 
@@ -30,11 +34,19 @@ int build_client_sock_fd(void);
 
 int connect_remote_server(void);
 
+int send_header(unsigned int fd, char *header, size_t count);
+
 int use_tunnel(void);
 
 int fd(void);
 
-int main() {
+int main(int argc, char **argv) {
+    if (argc < 2) {
+        puts("missing params, exit.(./main <port>)");
+        exit(0);
+    }
+    sscanf(argv[1], "%hu", &server_port);
+
     init_server_socket();
     listen_server_socket();
     if (build_client_sock_fd() != 0) {
@@ -78,7 +90,7 @@ int listen_server_socket() {
     if (listen_return < 0) {
         perror("listen error");
     }
-
+    printf("listening on port: %hu\n", server_port);
     return 0;
 }
 
@@ -87,21 +99,24 @@ int build_client_sock_fd(void) {
     char addr[addrLen];
     memset(addr, 0, addrLen);
     socklen_t len = (socklen_t) addrLen;
-
     // accept 第二个参数可以设置为足够长度的缓冲区来存放客户端的地址信息
     client_sock_fd = accept(server_sock_fd, (struct sockaddr *) addr, &len);
     if (client_sock_fd < 0) {
         perror("build_client_sock_fd () accept error:");
         return 1;
     }
-
     return 0;
 }
 
 int connect_remote_server(void) {
     struct hostent *host_ent;
-    host_ent = gethostbyname(argv[1]);
-    if(host_ent == NULL) {
+    char buf[MAX_LEN];
+    http_get_header(client_sock_fd, buf);
+    memset(remote_server_name, 0, sizeof(remote_server_name));
+    char *name = http_get_remote_host(http_header);
+    memmove(remote_server_name, name, strlen(name ) + 1);
+    host_ent = gethostbyname(remote_server_name);
+    if (host_ent == NULL) {
         perror("connect_remote_server() gethostbyname error ");
         return 1;
     }
@@ -119,8 +134,22 @@ int connect_remote_server(void) {
         return 1;
     } else {
         printf("connect_remote_server() connect success\n");
+        char complete[100];
+        strcat(complete, method_struct.method);
+        strcat(complete, " ");
+        strcat(complete, method_struct.url);
+        strcat(complete, " ");
+        strcat(complete, method_struct.version);
+        strcat(complete, "\r\n");
+        strcat(complete, http_header);
+        send_header(remote_socket_fd, complete, strlen(complete) + 1);
     }
     return 0;
+}
+
+int send_header(unsigned int fd, char *header, size_t count) {
+    int c = send(fd, header, count, 0);
+    return c;
 }
 
 int use_tunnel(void) {

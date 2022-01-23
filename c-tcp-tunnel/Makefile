@@ -1,4 +1,6 @@
+CC = gcc
+
 all: main
 
 main: server.c
-	cc server.c -o server
+	$(CC) http.c server.c -o server
