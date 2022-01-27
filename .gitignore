@@ -8,3 +8,4 @@ c-socket-echo/server
 c-http-request/main
 c-http-server/main
 c-tcp-tunnel/server
+c-tls-client/client
