@@ -1,4 +1,4 @@
-## dependent
+## dependency
 
 > libressl, automake, autoconf, libtool, perl
 
