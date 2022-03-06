@@ -11,6 +11,8 @@
 #include "llhttp.h"
 #include "common.h"
 #include "httpheaderlist.h"
+#include "deps/cJSON.h"
+#include "utils.h"
 
 // 16 位无符号整型
 uint16_t PORT;
@@ -231,7 +233,8 @@ int on_header_field(llhttp_t* parser, const char* at, size_t length)
     printf("head field: %s\n", header_field);
 
     header_item_t header_item;
-    strcpy(header_item.header, header_field);
+    char *lower = utils_str_to_lower_case(header_field);
+    strcpy(header_item.header, lower);
     http_header_addItem(header_item, &headers_list);
     return 0;
 }
@@ -245,8 +248,9 @@ int on_header_value(llhttp_t* parser, const char* at, size_t length)
     // 查找第一个 header 但 value 为空字符串的 header_item
     header_item_t *item = find_empty_http_header_item(&headers_list, find_empty_http_header_item_handler);
     if(item != NULL) {
+        char *lower = utils_str_to_lower_case(header_value);
         // 赋值 value
-        strcpy(item->value, header_value);
+        strcpy(item->value, lower);
     }
     return 0;
 }
@@ -259,7 +263,7 @@ int on_headers_complete(llhttp_t* parser)
     if(http_header_listIsEmpty(&headers_list) == false) {
         printf("on_headers_complete()\n");
 //        http_header_traverse(&headers_list, show_headers);
-        header_item_t *item = find_http_header_item_by_field(&headers_list, "Host");
+        header_item_t *item = find_http_header_item_by_field(&headers_list, "host");
         show_headers(*item);
         printf("\n");
     }
