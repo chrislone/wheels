@@ -12,7 +12,10 @@
 #include "common.h"
 #include "httpheaderlist.h"
 #include "deps/cJSON.h"
+#include "deps/base64.h"
 #include "utils.h"
+
+#define SERVER "main"
 
 // 16 位无符号整型
 uint16_t PORT;
@@ -248,9 +251,13 @@ int on_header_value(llhttp_t* parser, const char* at, size_t length)
     // 查找第一个 header 但 value 为空字符串的 header_item
     header_item_t *item = find_empty_http_header_item(&headers_list, find_empty_http_header_item_handler);
     if(item != NULL) {
-        char *lower = utils_str_to_lower_case(header_value);
-        // 赋值 value
-        strcpy(item->value, lower);
+        if(strcmp(item->header, "proxy-authorization") == 0) {
+            strcpy(item->value, header_value);
+        } else {
+            char *lower = utils_str_to_lower_case(header_value);
+            // 赋值 value
+            strcpy(item->value, lower);
+        }
     }
     return 0;
 }
@@ -264,7 +271,20 @@ int on_headers_complete(llhttp_t* parser)
         printf("on_headers_complete()\n");
 //        http_header_traverse(&headers_list, show_headers);
         header_item_t *item = find_http_header_item_by_field(&headers_list, "host");
+        header_item_t *proxy_auth_item = find_http_header_item_by_field(&headers_list, "proxy-authorization");
         show_headers(*item);
+        char *proxy_auth_decode;
+        char proxy_auth_str[MAX_LEN];
+        memset(proxy_auth_str, 0, sizeof(proxy_auth_str));
+        if(proxy_auth_item != NULL) {
+//            printf("proxy_auth_item value: %s\n", proxy_auth_item->value);
+            sscanf(proxy_auth_item->value, "Basic %s", proxy_auth_str);
+//            printf("proxy_auth_str: %s\n", proxy_auth_str);
+            base64_decode(proxy_auth_str, &proxy_auth_decode);
+//            printf("base64 decode: %s\n", proxy_auth_decode);
+        } else {
+            puts("proxy_auth_item->value is empty");
+        }
         printf("\n");
     }
     return 0;
@@ -352,7 +372,8 @@ void write_success(tls_t *ctx) {
     strcat(buf, "\r\n");
     strcat(buf, "Content-Length: 32");
     strcat(buf, "\r\n");
-    strcat(buf, "Server: haha");
+    strcat(buf, "Server: ");
+    strcat(buf, SERVER);
     strcat(buf, "\r\n");
     strcat(buf, "Content-Type: text/html; charset=utf-8");
     strcat(buf, "\r\n");
