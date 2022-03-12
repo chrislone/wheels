@@ -3,9 +3,15 @@
 
 *.out
 
+config.json
+
 c-socket-echo/client
 c-socket-echo/server
 c-http-request/main
 c-http-server/main
 c-tcp-tunnel/server
 c-tls-client/client
+c-tls-tunnel/main
+c-tls-tunnel/llhttp
+c-tls-tunnel/key
+c-tls-tunnel/config.json
