@@ -14,3 +14,4 @@ c-tls-client/client
 c-tls-tunnel/main
 c-tls-tunnel/llhttp
 c-tls-tunnel/key
+c-tls-tunnel/config.json

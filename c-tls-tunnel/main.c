@@ -14,6 +14,7 @@
 #include "deps/cJSON.h"
 #include "deps/base64.h"
 #include "utils.h"
+#include "config.h"
 
 #define SERVER "main"
 
@@ -78,6 +79,11 @@ int main(int argc, char **argv) {
         exit(0);
     }
     sscanf(argv[1], "%hu", &PORT);
+
+    int conf_ret = config_init();
+    if(conf_ret < 0) {
+        exit(1);
+    }
 
     tls_init();
     tls_config_ptr = tls_config_new();
@@ -330,11 +336,13 @@ int config_tls_server_context(tls_t *context, tls_config_t *config, uint32_t *pr
         printf("tls_config_set_ciphers error\n");
         return -1;
     }
-    if(tls_config_set_key_file(local_config, "key/aidao.xmodules.xyz.key") < 0) {
+    printf("config_key_file_path %s\n", config_key_file_path);
+    printf("config_crt_file_path %s\n", config_crt_file_path);
+    if(tls_config_set_key_file(local_config, config_key_file_path) < 0) {
         printf("tls_config_set_key_file error\n");
         return -1;
     }
-    if(tls_config_set_cert_file(local_config, "key/aidao.xmodules.xyz.pem") < 0) {
+    if(tls_config_set_cert_file(local_config, config_crt_file_path) < 0) {
         printf("tls_config_set_cert_file error\n");
         return -1;
     }
