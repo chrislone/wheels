@@ -242,8 +242,8 @@ int on_header_field(llhttp_t* parser, const char* at, size_t length)
     printf("head field: %s\n", header_field);
 
     header_item_t header_item;
-    char *lower = utils_str_to_lower_case(header_field);
-    strcpy(header_item.header, lower);
+//    char *lower = utils_str_to_lower_case(header_field);
+    strcpy(header_item.header, header_field);
     http_header_addItem(header_item, &headers_list);
     return 0;
 }
@@ -260,9 +260,9 @@ int on_header_value(llhttp_t* parser, const char* at, size_t length)
         if(strcmp(item->header, "proxy-authorization") == 0) {
             strcpy(item->value, header_value);
         } else {
-            char *lower = utils_str_to_lower_case(header_value);
+//            char *lower = utils_str_to_lower_case(header_value);
             // 赋值 value
-            strcpy(item->value, lower);
+            strcpy(item->value, header_value);
         }
     }
     return 0;
@@ -278,7 +278,8 @@ int on_headers_complete(llhttp_t* parser)
 //        http_header_traverse(&headers_list, show_headers);
         header_item_t *item = find_http_header_item_by_field(&headers_list, "host");
         header_item_t *proxy_auth_item = find_http_header_item_by_field(&headers_list, "proxy-authorization");
-        show_headers(*item);
+//        show_headers(*item);
+//        show_headers(*proxy_auth_item);
         char *proxy_auth_decode;
         char proxy_auth_str[MAX_LEN];
         memset(proxy_auth_str, 0, sizeof(proxy_auth_str));
@@ -336,8 +337,8 @@ int config_tls_server_context(tls_t *context, tls_config_t *config, uint32_t *pr
         printf("tls_config_set_ciphers error\n");
         return -1;
     }
-    printf("config_key_file_path %s\n", config_key_file_path);
-    printf("config_crt_file_path %s\n", config_crt_file_path);
+//    printf("config_key_file_path %s\n", config_key_file_path);
+//    printf("config_crt_file_path %s\n", config_crt_file_path);
     if(tls_config_set_key_file(local_config, config_key_file_path) < 0) {
         printf("tls_config_set_key_file error\n");
         return -1;
@@ -495,7 +496,8 @@ void show_headers(header_item_t item)
     printf("header: %s  value: %s\n", item.header, item.value);
 }
 
-// 查找 header_list 中的 item，
+// 遍历 header_list 中的 item 并把 item 传入 pfun 作为参数，pfun 函数返回 true 则停止遍历
+// 否则继续遍历，直到遍历链表的全部节点
 header_item_t *find_empty_http_header_item(const header_list_t *plist, bool (*pfun)(header_item_t item)) {
     header_node_t *pnode = *plist;
     while (pnode != NULL)
@@ -508,11 +510,17 @@ header_item_t *find_empty_http_header_item(const header_list_t *plist, bool (*pf
     return NULL;
 }
 
+// 保存 header 时按照原本的大小写规则原样保存到链表中
+// 查找时则转成小写来做对比
 header_item_t *find_http_header_item_by_field(const header_list_t *plist, const char *field) {
     header_node_t *pnode = *plist;
+    char *ptr = (char *)field;
+    const char *lower_field = utils_str_to_lower_case(ptr);
+    char *lower_field_in_list;
     while (pnode != NULL)
     {
-        if(strcmp(pnode->item.header, field) == 0){
+        lower_field_in_list = utils_str_to_lower_case(pnode->item.header);
+        if(strcmp(lower_field_in_list, lower_field) == 0){
             return &pnode->item;
         };
         pnode = pnode->next;
