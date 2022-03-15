@@ -1,4 +1,15 @@
 CC = gcc
+MAC = "Darwin"
+Linux = "Linux"
+PLATFORM="$(shell uname -s)"
+FLAGS ?=
+
+## ifeq 不需要缩进
+ifeq ($(PLATFORM),$(MAC))
+	FLAGS += -L/usr/local/lib
+else
+	FLAGS += -Wl,-rpath=/usr/local/lib
+endif
 
 all: main
 
@@ -10,4 +21,7 @@ main: main.c
 	utils.c \
 	config.c \
 	main.c \
- 	-iquote ./llhttp/build ./llhttp/build/libllhttp.a -lcrypto -lm -L/usr/local/lib -ltls -lssl
+ 	-iquote ./llhttp/build ./llhttp/build/libllhttp.a -lm $(FLAGS) -lcrypto -ltls -lssl
+
+system:
+	@echo "FLAGS: $(FLAGS)"
