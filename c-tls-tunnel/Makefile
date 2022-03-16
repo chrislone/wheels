@@ -1,7 +1,7 @@
 CC = gcc
 MAC = "Darwin"
 Linux = "Linux"
-PLATFORM="$(shell uname -s)"
+PLATFORM :="$(shell uname -s)"
 FLAGS ?=
 
 ## ifeq 不需要缩进
@@ -23,5 +23,5 @@ main: main.c
 	main.c \
  	-iquote ./llhttp/build ./llhttp/build/libllhttp.a -lm $(FLAGS) -lcrypto -ltls -lssl
 
-system:
-	@echo "FLAGS: $(FLAGS)"
+platform:
+	@echo "FLAGS: $(PLATFORM)"
