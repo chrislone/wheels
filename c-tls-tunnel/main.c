@@ -400,7 +400,7 @@ int get_remote_server_socket_fd(const char *domain_name, unsigned int *socket_fd
     struct hostent *host_ent;
     host_ent = gethostbyname(domain_name);
     if (host_ent == NULL) {
-        perror("connect_remote_server() gethostbyname error ");
+        printf("gethostbyname error for host: %s\n", domain_name);
         return 1;
     }
     struct sockaddr_in remote_server_addr;
