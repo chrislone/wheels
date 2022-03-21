@@ -65,6 +65,7 @@ void show_headers(header_item_t item);
 header_item_t *find_empty_http_header_item(const header_list_t *plist, bool (*pfun)(header_item_t item));
 bool find_empty_http_header_item_handler(header_item_t item);
 header_item_t *find_http_header_item_by_field(const header_list_t *plist, const char *field);
+char *parse_domain_from_host_header(char *host_str);
 
 header_list_t headers_list;
 
@@ -78,7 +79,8 @@ int main(int argc, char **argv) {
         puts("missing port, exit.(./main <port>)");
         exit(0);
     }
-    sscanf(argv[1], "%hu", &PORT);
+
+    PORT = (unsigned short) strtoul(argv[1], NULL, 10);
 
     int conf_ret = config_init();
     if(conf_ret < 0) {
@@ -156,8 +158,10 @@ int main(int argc, char **argv) {
     llhttp_errno_t llhttp_err_no;
     if((llhttp_err_no = llhttp_get_errno(&parser)) == HPE_PAUSED_UPGRADE) {
         printf("HPE_PAUSED_UPGRADE\n");
-        char server_name[100];
-        get_remote_server_socket_fd("www.baidu.com", &remote_sock_fd);
+        char *server_name;
+        header_item_t *host_header_item = find_http_header_item_by_field(&headers_list, "host");
+        server_name = parse_domain_from_host_header(host_header_item->value);
+        get_remote_server_socket_fd(server_name, &remote_sock_fd);
         write_connection_established(c_context);
         // 连接远程服务器 end
         memset(read_buf, 0, sizeof(read_buf));
@@ -396,7 +400,7 @@ int get_remote_server_socket_fd(const char *domain_name, unsigned int *socket_fd
     struct hostent *host_ent;
     host_ent = gethostbyname(domain_name);
     if (host_ent == NULL) {
-        perror("connect_remote_server() gethostbyname error ");
+        printf("gethostbyname error for host: %s\n", domain_name);
         return 1;
     }
     struct sockaddr_in remote_server_addr;
@@ -533,4 +537,23 @@ bool find_empty_http_header_item_handler(header_item_t item) {
         return true;
     }
     return false;
+}
+
+// 解析 HTTP 的 host header，host header 有可能如下格式：
+// example:443
+// 如果传入的字符串不含有 :，则返回传入的字符串指针
+char *parse_domain_from_host_header(char *host_str)
+{
+    char colon = ':';
+    char *location;
+    location = strchr(host_str, colon);
+    if (location == NULL)
+    {
+        return host_str;
+    }
+    int len = (location - host_str) / sizeof(char);
+    char *ret = (char *)malloc(len + 1);
+    memset(ret, 0, len + 1);
+    strncpy(ret, host_str, len);
+    return ret;
 }

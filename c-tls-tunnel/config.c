@@ -32,28 +32,23 @@ int config_init() {
     if (stat_ret == -1) {
         return NEG_STATUS;
     }
-
-    size_t size;
+    size_t size = 0;
     config_json_buf = (char *) malloc(conf_json_stat_buf.st_size * sizeof(char) + 1);
     memset(config_json_buf, 0, sizeof(*config_json_buf));
-
-    while (size != 0) {
+    do {
         int len = 128;
         char local_buf[len];
         memset(local_buf, 0, sizeof(local_buf));
         size = fread(local_buf, sizeof(char), len, fp_config_json);
-        if (size == 0) {
-            break;
-        }
         strncat(config_json_buf, local_buf, size);
-    }
+    } while (size != 0);
 
     cJSON *cJSON_conf_json = cJSON_Parse(config_json_buf);
     cJSON *cJSON_conf_json_key_file = cJSON_GetObjectItem(cJSON_conf_json, "keyFilePath");
     cJSON *cJSON_conf_json_crt_file = cJSON_GetObjectItem(cJSON_conf_json, "crtFilePath");
 
-    if(!cJSON_conf_json_crt_file->valuestring || !cJSON_conf_json_key_file->valuestring) {
-        printf("config.json(): need crtFilePath or keyFilePath filed\n");
+    if (!cJSON_conf_json_crt_file->valuestring || !cJSON_conf_json_key_file->valuestring) {
+        printf("config.c: invalid crtFilePath or keyFilePath filed\n");
         return NEG_STATUS;
     }
 
