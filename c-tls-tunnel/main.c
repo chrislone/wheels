@@ -552,8 +552,8 @@ char *parse_domain_from_host_header(char *host_str)
         return host_str;
     }
     int len = (location - host_str) / sizeof(char);
-    char *ret = (char *)malloc(sizeof(char) * (len + 1));
-    memset(ret, 0, sizeof(*ret));
+    char *ret = (char *)malloc(len + 1);
+    memset(ret, 0, len + 1);
     strncpy(ret, host_str, len);
     return ret;
 }
