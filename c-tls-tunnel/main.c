@@ -78,7 +78,8 @@ int main(int argc, char **argv) {
         puts("missing port, exit.(./main <port>)");
         exit(0);
     }
-    sscanf(argv[1], "%hu", &PORT);
+
+    PORT = (unsigned short) strtoul(argv[1], NULL, 10);
 
     int conf_ret = config_init();
     if(conf_ret < 0) {
