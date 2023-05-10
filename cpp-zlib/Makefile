@@ -16,7 +16,7 @@ endif
 
 # 先调用 clean 删除原本生成的文件再生成
 all: clean zpipe.o
-	$(CC) -v -std=c++11 $(LIB_Z_ARCHIVE) zpipe.o main.cc $(SEARCH_PARAM) -lz -o $(TARGET) \
+	$(CC) -v -std=c++11 $(LIB_Z_ARCHIVE_FILE) zpipe.o main.cc $(SEARCH_PARAM) -lz -o $(TARGET) \
 	&& rm zpipe.o
 
 zpipe.o:
